@@ -1,0 +1,16 @@
+{
+    "id_proveedor": 17,
+    "fecha": "2024-04-20",
+    "pedido": [
+      {
+        "id_item": 10,
+        "cantidad": 5,
+        "nota": "empaquetadoparatransporte"
+      },
+      {
+        "id_item": 11,
+        "cantidad": 3,
+        "nota": "empaquetadoparatransporte"
+      }
+    ]
+  }
