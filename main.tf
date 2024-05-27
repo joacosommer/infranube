@@ -146,3 +146,9 @@ resource "aws_cloudwatch_log_group" "application_logs" {
 #   role       = aws_iam_role.cloudtrail_role.name
 #   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSCloudTrailLoggingPolicy"
 # }
+
+resource "aws_s3_bucket_object" "index_html" {
+  bucket = module.static_site_bucket.bucket_name
+  key    = "index.html"
+  source = "./index.html"
+}
