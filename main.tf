@@ -10,12 +10,28 @@ module "orders_bucket" {
   project_name = var.project_name
 }
 
+module "sns" {
+  source             = "./modules/sns"
+  name               = "${var.project_name}-order-notifications"
+  notification_email = var.notification_email
+}
+
+module "sqs" {
+  source        = "./modules/sqs"
+  name          = "${var.project_name}-order-queue"
+  sns_topic_arn = module.sns.arn
+}
+
 module "order_processing_lambda" {
-  source        = "./modules/lambda_function"
-  function_name = "${var.project_name}-order-processing"
-  s3_bucket     = module.orders_bucket.bucket_name
-  project_name  = var.project_name
+  source            = "./modules/lambda_function"
+  function_name     = "${var.project_name}-order-processing"
+  s3_bucket         = module.orders_bucket.bucket_name
+  project_name      = var.project_name
   function_filename = "order_processing_lambda"
+  environment = {
+    S3_BUCKET     = module.orders_bucket.bucket_name
+    SNS_TOPIC_ARN = module.sns.arn
+  }
 }
 
 resource "aws_iam_role_policy" "lambda_s3_policy" {
@@ -30,11 +46,16 @@ resource "aws_iam_role_policy" "lambda_s3_policy" {
           "s3:GetObject",
           "s3:PutObject",
         ],
-        Effect   = "Allow",
+        Effect = "Allow",
         Resource = [
           "${module.orders_bucket.bucket_arn}/*",
         ],
       },
+      {
+        Action   = "sns:Publish",
+        Effect   = "Allow",
+        Resource = module.sns.arn
+      }
     ],
   })
 }
@@ -56,6 +77,13 @@ resource "aws_lambda_permission" "allow_s3" {
   function_name = module.order_processing_lambda.lambda_function_name
   principal     = "s3.amazonaws.com"
   source_arn    = module.orders_bucket.bucket_arn
+}
+
+resource "aws_lambda_event_source_mapping" "order_queue_event" {
+  event_source_arn = module.sqs.arn
+  function_name    = module.order_processing_lambda.lambda_function_arn
+  batch_size       = 10
+  enabled          = true
 }
 
 # resource "aws_cloudfront_distribution" "cdn" {
@@ -106,9 +134,9 @@ resource "aws_lambda_permission" "allow_s3" {
 #   }
 # }
 
-resource "aws_cloudfront_origin_access_identity" "origin_access_identity" {
-  comment = "Origin access identity for static site bucket"
-}
+# resource "aws_cloudfront_origin_access_identity" "origin_access_identity" {
+#   comment = "Origin access identity for static site bucket"
+# }
 
 resource "aws_cloudwatch_log_group" "application_logs" {
   name              = "/aws/lambda/${var.project_name}-logs"

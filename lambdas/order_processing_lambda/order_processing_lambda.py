@@ -1,5 +1,10 @@
 import json
 import boto3
+import os
+
+s3_client = boto3.client('s3')
+sns_client = boto3.client('sns')
+sns_topic_arn = os.environ['SNS_TOPIC_ARN']
 
 def lambda_handler(event, context):
     # Log the received event
@@ -18,6 +23,12 @@ def lambda_handler(event, context):
         # Process the order data
         process_order(order_data)
         
+        sns_client.publish(
+            TopicArn=sns_topic_arn,
+            Message=f"Processed order for provider ID: {order_data['id_proveedor']} on date {order_data['fecha']}",
+            Subject="Order Processed"
+        )
+        
     return {
         'statusCode': 200,
         'body': json.dumps('Order processed successfully')
@@ -31,12 +42,9 @@ def process_order(order_data):
     # Here you would typically insert the order into a database or send a notification
     # For this example, we'll just log the order items
 
-def get_s3_object(bucket, key):
-    # Create an S3 client
-    s3 = boto3.client('s3')
-    
+def get_s3_object(bucket, key):    
     # Get the object from the S3 bucket
-    response = s3.get_object(Bucket=bucket, Key=key)
+    response = s3_client.get_object(Bucket=bucket, Key=key)
     
     # Return the object data
     return response['Body'].read().decode('utf-8')
