@@ -79,12 +79,12 @@ resource "aws_lambda_permission" "allow_s3" {
   source_arn    = module.orders_bucket.bucket_arn
 }
 
-resource "aws_lambda_event_source_mapping" "order_queue_event" {
-  event_source_arn = module.sqs.arn
-  function_name    = module.order_processing_lambda.lambda_function_arn
-  batch_size       = 10
-  enabled          = true
-}
+# resource "aws_lambda_event_source_mapping" "order_queue_event" {
+#   event_source_arn = module.sqs.arn
+#   function_name    = module.order_processing_lambda.lambda_function_arn
+#   batch_size       = 10
+#   enabled          = true
+# }
 
 # resource "aws_cloudfront_distribution" "cdn" {
 #   origin {
