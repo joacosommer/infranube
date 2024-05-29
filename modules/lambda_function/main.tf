@@ -9,9 +9,7 @@ resource "aws_lambda_function" "lambda" {
   filename = "lambdas/${var.function_filename}/${var.function_filename}.zip"
 
   environment {
-    variables = {
-      S3_BUCKET = var.s3_bucket
-    }
+    variables = var.environment
   }
 
   tags = {
