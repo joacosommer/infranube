@@ -4,6 +4,47 @@ module "static_site_bucket" {
   project_name = var.project_name
 }
 
+resource "aws_s3_bucket_public_access_block" "example" {
+  bucket = module.static_site_bucket.bucket_id
+
+  block_public_policy     = false
+  restrict_public_buckets = false 
+  block_public_acls       = false 
+  ignore_public_acls      = false 
+}
+
+resource "aws_s3_bucket_policy" "hosting_policy" {
+  bucket = module.static_site_bucket.bucket_id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Sid       = "PublicReadGetObject",
+        Effect    = "Allow",
+        Principal = "*",
+        Action    = "s3:GetObject",
+        Resource  = "arn:aws:s3:::${module.static_site_bucket.bucket_name}/*",
+      },
+    ],
+  })
+}
+
+resource "aws_s3_object" "index_html" {
+  bucket = module.static_site_bucket.bucket_id
+  key    = "index.html"
+  source = "./index.html"
+  content_type = "text/html"
+}
+
+resource "aws_s3_bucket_website_configuration" "website_configuration" {
+  bucket = module.static_site_bucket.bucket_id
+
+  index_document {
+    suffix = "index.html"
+  }
+}
+
 module "orders_bucket" {
   source       = "./modules/s3_bucket"
   bucket_name  = "${var.project_name}-orders"
@@ -175,8 +216,3 @@ resource "aws_cloudwatch_log_group" "application_logs" {
 #   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSCloudTrailLoggingPolicy"
 # }
 
-resource "aws_s3_bucket_object" "index_html" {
-  bucket = module.static_site_bucket.bucket_name
-  key    = "index.html"
-  source = "./index.html"
-}
