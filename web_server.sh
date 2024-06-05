@@ -17,10 +17,10 @@ cat <<EOT > /var/www/html/index.html
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Web Page</title>
+    <title>Pagina dinamica en EC2</title>
 </head>
 <body>
-    <h1>Welcome to My Web Page</h1>
+    <h1>Ejemplo de pagina dinamica en EC2</h1>
 </body>
 </html>
 EOT

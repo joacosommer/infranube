@@ -1,3 +1,6 @@
-aws_region = "us-east-1"
-project_name = "obligatorio-2"
+aws_region         = "us-east-1"
+project_name       = ""
 notification_email = ""
+ami_id             = "ami-04b70fa74e45c3917" # Ejemplo de AMI para Ubuntu
+instance_type      = "t2.micro"
+key_name           = "" # Nombre de la llave para acceder a la instancia. Crearla antes de ejecutar el script
