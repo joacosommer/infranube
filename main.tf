@@ -34,6 +34,48 @@ module "order_processing_lambda" {
   }
 }
 
+module "ec2_site_bucket" {
+  source       = "./modules/s3_bucket"
+  bucket_name  = "${var.project_name}-ec2-site"
+  project_name = var.project_name
+}
+
+
+
+# # need to set the policy for the bucket to allow the EC2 instance to access it and copy the index.html file
+# resource "aws_s3_bucket_policy" "ec2_site_bucket_policy" {
+#   bucket = module.ec2_site_bucket.bucket_id
+
+#   policy = jsonencode({
+#     Version = "2012-10-17",
+#     Statement = [
+#       {
+#         Effect    = "Allow",
+#         Principal = "*",
+#         Action    = "s3:GetObject",
+#         Resource  = "${module.ec2_site_bucket.bucket_arn}/*",
+#       },
+#     ],
+#   })
+# }
+
+resource "aws_s3_object" "index_html_ec2" {
+  bucket = module.ec2_site_bucket.bucket_name
+  key    = "index.html"
+  source = "./index.html"
+  content_type = "text/html"
+}
+
+module "web_server" {
+  source         = "./modules/ec2"
+  ami_id         = var.ami_id
+  instance_type  = var.instance_type
+  key_name       = var.key_name
+  instance_name  = "${var.project_name}-web-server"
+  user_data      = file("./web_server.sh")
+  bucket_name    = module.ec2_site_bucket.bucket_name
+}
+
 resource "aws_iam_role_policy" "lambda_s3_policy" {
   name = "lambda_s3_policy"
   role = module.order_processing_lambda.lambda_role_id
